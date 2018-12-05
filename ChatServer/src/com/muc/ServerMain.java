@@ -22,20 +22,9 @@ public class ServerMain {
 				Socket clientSocket = serverSocket.accept();
 				System.out.println("Accepted connection from" + clientSocket);
 				
-				
 				// We create a new thread EVERY TIME we get a connection from client
-				Thread t = new Thread() {
-					@Override
-					public void run() {
-						try {
-							handleClient(clientSocket);
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-					}
-				};
-				
-				t.start();	
+				ServerWorker worker = new ServerWorker(clientSocket);
+				worker.start();
 			}
 			
 			
@@ -46,20 +35,7 @@ public class ServerMain {
 		
 	}
 
-	private static void handleClient(Socket clientSocket) throws IOException {
-		
-		OutputStream outputStream = clientSocket.getOutputStream();
-		for(int i=0; i<10; i++) {
-			outputStream.write("hello worldn".getBytes());
-			try {
-				Thread.sleep(1000);	
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		
-		clientSocket.close();
-	}
+	
 	
 	
 }
