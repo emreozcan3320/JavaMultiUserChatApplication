@@ -22,6 +22,8 @@ public class ServerMain {
 				Socket clientSocket = serverSocket.accept();
 				System.out.println("Accepted connection from" + clientSocket);
 				
+				
+				// We create a new thread EVERY TIME we get a connection from client
 				Thread t = new Thread() {
 					@Override
 					public void run() {
