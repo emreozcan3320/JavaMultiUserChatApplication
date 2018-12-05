@@ -1,6 +1,9 @@
 package com.muc;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
 
@@ -22,17 +25,21 @@ public class ServerWorker extends Thread {
 	}
 
 	private void handleClient() throws IOException {
-			
-			OutputStream outputStream = clientSocket.getOutputStream();
-			for(int i=0; i<10; i++) {
-				outputStream.write("hello worldn".getBytes());
-				try {
-					Thread.sleep(1000);	
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+		// getting access to the input stream for reading the data from the client
+		InputStream inputStream = clientSocket.getInputStream();				
+		// output stream that we can access from the client socket to get data from client
+		OutputStream outputStream = clientSocket.getOutputStream();
+		
+		// we create a buffer reader to read line by line
+		BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+		String line;
+		while((line = reader.readLine()) != null) {
+			if("quit".equalsIgnoreCase(line)) {
+				break;
 			}
-			
-			clientSocket.close();
+			String msg = "You typed : "+ line+"\n";
+			outputStream.write(msg.getBytes());
 		}
+		clientSocket.close();
+	}
 }
