@@ -6,15 +6,18 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 
 public class ServerWorker extends Thread {
-
-	private Socket clientSocket;
+	private final Server server;
+	private final Socket clientSocket;
 	private String login = null;
+	private OutputStream outputStream;
 
-	public ServerWorker(Socket clientSocket) {
+	public ServerWorker(Server server, Socket clientSocket) {
+		this.server = server;
 		this.clientSocket = clientSocket;
 	}
 	
@@ -31,7 +34,7 @@ public class ServerWorker extends Thread {
 		// getting access to the input stream for reading the data from the client
 		InputStream inputStream = clientSocket.getInputStream();				
 		// output stream that we can access from the client socket to get data from client
-		OutputStream outputStream = clientSocket.getOutputStream();
+		this.outputStream = clientSocket.getOutputStream();
 		
 		// we create a buffer reader to read line by line
 		BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
@@ -56,6 +59,10 @@ public class ServerWorker extends Thread {
 		}
 		clientSocket.close();
 	}
+	
+	public String getLogin() {
+		return login;
+	}
 
 	private void handleLogin(OutputStream outputStream, String[] tokens) throws IOException {
 		if(tokens.length == 3 ) {
@@ -68,11 +75,30 @@ public class ServerWorker extends Thread {
 				outputStream.write(msg.getBytes());
 				this.login = login;
 				System.out.println("User Loged In Succesfully : " + login);
+				
+				List<ServerWorker> workerList = server.getWorkerList();
+				
+				//send current user all other online logins
+				for(ServerWorker worker : workerList) {
+					String msg2 = "online" + worker.getLogin();
+					send(msg2);
+				}
+				
+				// send other online users current user's status
+				String onlineMsg = "online"+login+"\n";
+				for(ServerWorker worker : workerList) {
+					worker.send(onlineMsg);
+				}
 			}else {
 				String msg = "error login fail";
 				outputStream.write(msg.getBytes());
 			}
 		}
+		
+	}
+
+	private void send(String msg) throws IOException {
+		outputStream.write(msg.getBytes());
 		
 	}
 }
