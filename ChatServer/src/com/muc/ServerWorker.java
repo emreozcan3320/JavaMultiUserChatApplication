@@ -46,7 +46,8 @@ public class ServerWorker extends Thread {
 			
 			if(tokens != null && tokens.length > 0 ) {
 				String cmd  = tokens[0];
-				if("quit".equalsIgnoreCase(cmd)) {
+				if("logoff".equalsIgnoreCase(cmd) || "quit".equalsIgnoreCase(cmd)) {
+					handleLogoff();
 					break;
 				}else if(cmd.equals("login")){
 					handleLogin(outputStream, tokens);
@@ -60,6 +61,11 @@ public class ServerWorker extends Thread {
 		clientSocket.close();
 	}
 	
+	private void handleLogoff() {
+		clientSocket.close();
+		
+	}
+
 	public String getLogin() {
 		return login;
 	}
@@ -79,15 +85,22 @@ public class ServerWorker extends Thread {
 				List<ServerWorker> workerList = server.getWorkerList();
 				
 				//send current user all other online logins
-				for(ServerWorker worker : workerList) {
-					String msg2 = "online" + worker.getLogin();
-					send(msg2);
+				for(ServerWorker worker : workerList) {					
+					if(worker.getLogin() != null) {
+						if(!login.equals(worker.getLogin())){
+							String msg2 = "online" + worker.getLogin();
+							send(msg2);	
+						}
+					}						
+									
 				}
 				
 				// send other online users current user's status
 				String onlineMsg = "online"+login+"\n";
 				for(ServerWorker worker : workerList) {
-					worker.send(onlineMsg);
+					if(!login.equals(worker.getLogin())){
+						worker.send(onlineMsg);
+					}
 				}
 			}else {
 				String msg = "error login fail";
@@ -98,7 +111,9 @@ public class ServerWorker extends Thread {
 	}
 
 	private void send(String msg) throws IOException {
-		outputStream.write(msg.getBytes());
+		if(login != null) {
+			outputStream.write(msg.getBytes());
+		}
 		
 	}
 }
