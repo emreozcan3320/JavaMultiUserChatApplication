@@ -61,7 +61,16 @@ public class ServerWorker extends Thread {
 		clientSocket.close();
 	}
 	
-	private void handleLogoff() {
+	private void handleLogoff() throws IOException {
+		List<ServerWorker> workerList = server.getWorkerList();
+		
+		// send other online users current user's status
+		String onlineMsg = "offline"+login+"\n";
+		for(ServerWorker worker : workerList) {
+			if(!login.equals(worker.getLogin())){
+				worker.send(onlineMsg);
+			}
+		}
 		clientSocket.close();
 		
 	}
